@@ -1,0 +1,3 @@
+import libs = libensketch-geometry%lib{ensketch-geometry}
+
+exe{version}: {hxx ixx txx cxx}{**} $libs
