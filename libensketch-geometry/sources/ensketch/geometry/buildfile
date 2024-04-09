@@ -1,6 +1,6 @@
 intf_libs = # Interface dependencies.
+import intf_libs += libensketch-xstd%lib{ensketch-xstd}
 impl_libs = # Implementation dependencies.
-#import xxxx_libs += libhello%lib{hello}
 
 lib{ensketch-geometry}: {hxx ixx txx cxx}{** -version} hxx{version} $impl_libs $intf_libs
 

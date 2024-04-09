@@ -18,6 +18,6 @@ email: ensketch@mailbox.org
 depends: * build2 >= 0.16.0
 depends: * bpkg >= 0.16.0
 
-# depends: libensketch-xstd ^0.1.0
+depends: libensketch-xstd
 
 tests: libensketch-geometry-tests == $

@@ -14,7 +14,7 @@ int main() {
   // into a 'stringstream' that is printed at the end at once.
   //
   stringstream output;
-  output << "\nensketch xstd version:\n\n";
+  output << "\nensketch geometry version:\n\n";
 
 #define CAPTURE(X) \
   output << left << setw(20) << #X << " = " << right << setw(40) << X << '\n'
