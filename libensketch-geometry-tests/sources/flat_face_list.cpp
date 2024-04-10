@@ -22,20 +22,21 @@ static_assert(std::ranges::random_access_range<flat_face_list>);
 
 SCENARIO("flat_face_list") {
   flat_face_list faces{};
+  const auto& cfaces = faces;
 
   const auto check_content = [&] {
     // Standard For Loop and Subscript Operator
     //
-    for (size_t fid = 0; fid < size(faces); ++fid) {
-      for (size_t i = 0; i < size(faces[fid]); ++i) {
-        CHECK(faces[fid][i] == fid + 1 + i);
-        CHECK(faces[fid, i] == fid + 1 + i);
+    for (size_t fid = 0; fid < size(cfaces); ++fid) {
+      for (size_t i = 0; i < size(cfaces[fid]); ++i) {
+        CHECK(cfaces[fid][i] == fid + 1 + i);
+        CHECK(cfaces[fid, i] == fid + 1 + i);
       }
     }
 
     // Range-Based For Loop
     //
-    for (int fid = 0; auto face : faces) {
+    for (int fid = 0; auto face : cfaces) {
       for (int i = 0; auto vid : face) {
         CHECK(vid == fid + 1 + i);
         ++i;

@@ -31,84 +31,12 @@ struct basic_flat_face_list {
   using size_type = type;
   using vertex = size_type;
   using face = span<vertex>;
+  using const_face = span<const vertex>;
 
-  struct iterator {
-    using iterator_category = random_access_iterator_tag;
-    // using pointer = ;
-    using value_type = face;
-    using reference_type = face;
-    using difference_type = make_signed_t<size_type>;
-
-    auto base() const noexcept -> basic_flat_face_list& { return *ptr; }
-
-    auto operator*() noexcept -> face { return ptr->operator[](index); }
-    auto operator*() const noexcept -> face { return ptr->operator[](index); }
-
-    auto operator++() noexcept -> iterator& {
-      ++index;
-      return *this;
-    }
-
-    auto operator++(int) noexcept -> iterator {
-      iterator result = *this;
-      ++index;
-      return result;
-    }
-
-    auto operator--() noexcept -> iterator& {
-      --index;
-      return *this;
-    }
-
-    auto operator--(int) noexcept -> iterator {
-      iterator result = *this;
-      --index;
-      return result;
-    }
-
-    friend auto operator-(const iterator& it1, const iterator& it2) noexcept
-        -> difference_type {
-      return it2.index - it1.index;
-    }
-
-    friend auto operator+(const iterator& it, difference_type n) noexcept
-        -> iterator {
-      return {it->ptr, it->index + n};
-    }
-    friend auto operator+(difference_type n, const iterator& it) noexcept
-        -> iterator {
-      return it + n;
-    }
-
-    friend auto operator-(const iterator& it, difference_type n) noexcept
-        -> iterator {
-      return {it->ptr, it->index - n};
-    }
-    friend auto operator-(difference_type n, const iterator& it) noexcept
-        -> iterator {
-      return it - n;
-    }
-
-    auto operator+=(difference_type n) noexcept -> iterator& {
-      index += n;
-      return *this;
-    }
-
-    auto operator-=(difference_type n) noexcept -> iterator& {
-      index -= n;
-      return *this;
-    }
-
-    auto operator[](difference_type n) const noexcept -> face {
-      return ptr->operator[](index + n);
-    }
-
-    friend auto operator<=>(const iterator&,
-                            const iterator&) noexcept = default;
-
-    basic_flat_face_list* ptr{};
-    size_type index{};
-  };
+  template <bool is_constant>
+  struct basic_iterator;
+  using iterator = basic_iterator<false>;
+  using const_iterator = basic_iterator<true>;
 
   basic_flat_face_list() = default;
 
@@ -118,19 +46,22 @@ struct basic_flat_face_list {
   auto operator[](size_type fid) noexcept -> face {
     return {&vertices[offset[fid]], &vertices[offset[fid + 1]]};
   }
-  auto operator[](size_type fid) const noexcept -> face {
+  auto operator[](size_type fid) const noexcept -> const_face {
     return {&vertices[offset[fid]], &vertices[offset[fid + 1]]};
   }
 
+  auto operator[](size_type fid, size_type i) noexcept -> vertex& {
+    return vertices[offset[fid] + i];
+  }
   auto operator[](size_type fid, size_type i) const noexcept -> vertex {
     return vertices[offset[fid] + i];
   }
 
-  auto begin() noexcept -> iterator { return iterator{this, 0}; }
+  auto begin() noexcept -> iterator { return {this, 0}; }
   auto end() noexcept -> iterator { return {this, size()}; }
 
-  auto begin() const noexcept -> iterator { return iterator{this, 0}; }
-  auto end() const noexcept -> iterator { return {this, size()}; }
+  auto begin() const noexcept -> const_iterator { return {this, 0}; }
+  auto end() const noexcept -> const_iterator { return {this, size()}; }
 
   void clear() {
     vertices.clear();
@@ -164,6 +95,9 @@ struct basic_flat_face_list {
   auto front() noexcept -> face { return operator[](0); }
   auto back() noexcept -> face { return operator[](size() - 1); }
 
+  auto front() const noexcept -> const_face { return operator[](0); }
+  auto back() const noexcept -> const_face { return operator[](size() - 1); }
+
   // void assign();
   // void insert();
   // void erase();
@@ -172,6 +106,93 @@ struct basic_flat_face_list {
  private:
   vector<vertex> vertices{};
   vector<size_type> offset{0};
+};
+
+template <unsigned_integral type>
+template <bool is_constant>
+struct basic_flat_face_list<type>::basic_iterator {
+  using iterator_category = random_access_iterator_tag;
+  using ptr_type = conditional_t<is_constant,
+                                 const basic_flat_face_list*,
+                                 basic_flat_face_list*>;
+  using offset_type = size_type;
+  using value_type = conditional_t<is_constant, const_face, face>;
+  using reference_type = value_type;
+  using difference_type = make_signed_t<size_type>;
+
+  auto base() const noexcept -> basic_flat_face_list& { return *ptr; }
+
+  auto operator*() noexcept -> reference_type {
+    return ptr->operator[](offset);
+  }
+  auto operator*() const noexcept -> reference_type {
+    return ptr->operator[](offset);
+  }
+
+  auto operator++() noexcept -> basic_iterator& {
+    ++offset;
+    return *this;
+  }
+
+  auto operator++(int) noexcept -> basic_iterator {
+    basic_iterator result = *this;
+    ++offset;
+    return result;
+  }
+
+  auto operator--() noexcept -> basic_iterator& {
+    --offset;
+    return *this;
+  }
+
+  auto operator--(int) noexcept -> basic_iterator {
+    basic_iterator result = *this;
+    --offset;
+    return result;
+  }
+
+  friend auto operator-(const basic_iterator& it1,
+                        const basic_iterator& it2) noexcept -> difference_type {
+    return it2.offset - it1.offset;
+  }
+
+  friend auto operator+(const basic_iterator& it, difference_type n) noexcept
+      -> basic_iterator {
+    return {it->ptr, it->offset + n};
+  }
+  friend auto operator+(difference_type n, const basic_iterator& it) noexcept
+      -> basic_iterator {
+    return it + n;
+  }
+
+  friend auto operator-(const basic_iterator& it, difference_type n) noexcept
+      -> basic_iterator {
+    return {it->ptr, it->offset - n};
+  }
+  friend auto operator-(difference_type n, const basic_iterator& it) noexcept
+      -> basic_iterator {
+    return it - n;
+  }
+
+  auto operator+=(difference_type n) noexcept -> basic_iterator& {
+    offset += n;
+    return *this;
+  }
+
+  auto operator-=(difference_type n) noexcept -> basic_iterator& {
+    offset -= n;
+    return *this;
+  }
+
+  auto operator[](difference_type n) const noexcept -> face {
+    return ptr->operator[](offset + n);
+  }
+
+  friend auto operator<=>(const basic_iterator&,
+                          const basic_iterator&) noexcept = default;
+
+  ptr_type ptr{};
+  offset_type offset{};
 };
 
 using flat_face_list = basic_flat_face_list<uint32>;
