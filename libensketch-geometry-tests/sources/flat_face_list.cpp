@@ -11,6 +11,15 @@ static_assert(
     ensketch::geometry::generic::face<initializer_list<uint32>, uint32>);
 // static_assert(ensketch::geometry::generic::triangle<array<uint32, 3>, uint32>);
 
+static_assert(std::weakly_incrementable<flat_face_list::iterator>);
+static_assert(std::input_or_output_iterator<flat_face_list::iterator>);
+static_assert(std::input_iterator<flat_face_list::iterator>);
+static_assert(std::forward_iterator<flat_face_list::iterator>);
+static_assert(std::bidirectional_iterator<flat_face_list::iterator>);
+static_assert(std::random_access_iterator<flat_face_list::iterator>);
+
+static_assert(std::ranges::random_access_range<flat_face_list>);
+
 SCENARIO("flat_face_list") {
   flat_face_list faces{};
 
@@ -26,13 +35,13 @@ SCENARIO("flat_face_list") {
 
     // Range-Based For Loop
     //
-    // for (int fid = 0; auto face : faces) {
-    //   for (int i = 0; auto vid : face) {
-    //     CHECK(vid == fid + 1 + i);
-    //     ++i;
-    //   }
-    //   ++fid;
-    // }
+    for (int fid = 0; auto face : faces) {
+      for (int i = 0; auto vid : face) {
+        CHECK(vid == fid + 1 + i);
+        ++i;
+      }
+      ++fid;
+    }
   };
 
   CHECK(faces.size() == 0);
